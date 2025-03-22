@@ -20,4 +20,10 @@ public class OrderController {
         return orderService.placeOrder(orderRequest);
     }
 
+    @GetMapping("/callgreetings/{name}")
+    public String callGreeting(@PathVariable String name){
+        return orderService.callGreeting(name);
+    }
+
+
 }
