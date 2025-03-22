@@ -4,8 +4,10 @@ import com.npci.orders.dto.OrderRequest;
 import com.npci.orders.dto.OrderResponse;
 import com.npci.orders.dto.Product;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -13,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Random;
 
+@RefreshScope
 @Service
 public class OrderService {
 
@@ -20,6 +23,10 @@ public class OrderService {
 
     @Autowired
     RestTemplate restTemplate;
+
+
+    @Value("${db.name}")
+    private String dbName;
 
 
     @Autowired
@@ -78,7 +85,7 @@ public class OrderService {
 
         ResponseEntity<String> resp = restTemplate.getForEntity(url,String.class);
 
-        return resp.getBody();
+        return resp.getBody() + " - DB Name = " + dbName;
     }
 
 }
