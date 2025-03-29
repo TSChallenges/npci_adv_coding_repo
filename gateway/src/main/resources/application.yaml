@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+
+spring:
+  application:
+    name: npci_gateway
+  cloud:
+    gateway:
+      routes:
+        - id: orders_route
+          uri: lb://ORDERS
+          predicates:
+            - Path=/order-service/**
+          filters:
+            - StripPrefix=1
+        - id: products_route
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/product-service/**
+          filters:
+            - StripPrefix=1
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
