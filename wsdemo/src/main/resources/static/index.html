@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NPCI Chat Application</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        #message-area { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<div>
+    <input type="text" id="username" placeholder="Enter your name">
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+</div>
+<div id="chat" style="display: none;">
+    <div id="message-area"></div>
+    <input type="text" id="message" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const username = document.getElementById('username').value.trim();
+        if (username) {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function(frame) {
+                console.log('Connected: ' + frame);
+
+                // Show chat UI
+                document.getElementById('chat').style.display = 'block';
+
+                // Subscribe to the public topic
+                stompClient.subscribe('/topic/public', function(message) {
+                    showMessage(JSON.parse(message.body));
+                });
+
+                // Tell server a new user joined
+                stompClient.send("/app/chat/addUser", {},
+                    JSON.stringify({sender: username, type: 'JOIN'})
+                );
+            });
+        }
+    }
+
+    function sendMessage() {
+        const username = document.getElementById('username').value.trim();
+        const messageContent = document.getElementById('message').value.trim();
+
+        if (messageContent && stompClient) {
+            const chatMessage = {
+                sender: username,
+                content: messageContent,
+                type: 'CHAT'
+            };
+
+            stompClient.send("/app/chat/sendMessage", {}, JSON.stringify(chatMessage));
+            document.getElementById('message').value = '';
+        }
+    }
+
+    function showMessage(message) {
+        const messageArea = document.getElementById('message-area');
+        const messageElement = document.createElement('div');
+
+        if (message.type === 'JOIN') {
+            messageElement.style.color = 'green';
+            messageElement.style.fontWeight = 'bold';
+        }
+
+        messageElement.appendChild(document.createTextNode(
+            message.sender + ": " + message.content
+        ));
+        messageArea.appendChild(messageElement);
+        messageArea.scrollTop = messageArea.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
