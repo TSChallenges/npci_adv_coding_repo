@@ -1,0 +1,25 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: 'true'
+    hibernate:
+      ddl-auto: update
+  application:
+    name: product-service
+  datasource:
+    min-idle: '2'
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    max-wait: '10000'
+    username: postgres
+    initialization-mode: always
+    max-active: '10'
+    url: jdbc:postgresql://localhost:5432/npci
+    max-idle: '8'
+company:
+  city: Hyderabad
+  name: NPCI
+server:
+  port: 8085
