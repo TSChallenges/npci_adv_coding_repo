@@ -1,6 +1,7 @@
 package com.npci.bankdemo.contoller;
 
 import com.npci.bankdemo.dao.BankAccount;
+import com.npci.bankdemo.dto.BankAccountCreateRequest;
 import com.npci.bankdemo.service.AccountService;
 import org.apache.logging.log4j.simple.SimpleLogger;
 import org.apache.logging.slf4j.SLF4JLogger;
@@ -22,10 +23,14 @@ public class AccountsController {
 
 //    Create Account	- POST:/accounts		- Body	(customerId, type, branch)
     @PostMapping("")
-    public ResponseEntity<BankAccount> createAccount(@RequestBody BankAccount bankAccount){
-        System.out.println("In createAccount - customer Id = " + bankAccount.getCustomerId());
+    public ResponseEntity<BankAccount> createAccount(@RequestBody BankAccountCreateRequest request){
+        System.out.println("In createAccount - customer Id = " + request.getCustomerId());
 
-        ResponseEntity<BankAccount> accountResponse =  accountService.createAccount(bankAccount);
+        BankAccount account = new BankAccount();
+        account.setCustomerId(request.getCustomerId());
+        account.setType(request.getType());
+        account.setBranch(request.getBranch());
+        ResponseEntity<BankAccount> accountResponse =  accountService.createAccount(account);
 
         System.out.println("Account Created "+ accountResponse.getBody().getAccountNumber());
         return accountResponse;

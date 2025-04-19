@@ -1,29 +1,32 @@
 package com.npci.bankdemo.service;
 
 import com.npci.bankdemo.dao.BankAccount;
-import com.npci.bankdemo.dao.Customer;
 import com.npci.bankdemo.dao.Transaction;
 import com.npci.bankdemo.fraud.FraudDetector;
+import com.npci.bankdemo.repos.BankAccountRepository;
+import com.npci.bankdemo.repos.TransactionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class AccountService {
 
-    private static List<BankAccount> bankAccounts = new ArrayList<>();
+    //private static List<BankAccount> bankAccounts = new ArrayList<>();
+
+    @Autowired
+    BankAccountRepository bankAccountRepository;
+
+    @Autowired
+    TransactionRepository transactionRepository;
 
     //    Create Account	- POST:/accounts		- Body	(customerId, type, branch)
     public ResponseEntity<BankAccount> createAccount(BankAccount bankAccount){
-        bankAccount.setAccountNumber(new Random().nextLong());
-        bankAccounts.add(bankAccount);
+        //bankAccount.setAccountNumber(new Random().nextLong());
+        bankAccount = bankAccountRepository.save(bankAccount);
         return new ResponseEntity<>(bankAccount, HttpStatus.CREATED);
     }
 
@@ -35,10 +38,12 @@ public class AccountService {
             BankAccount bankAccount = findAccountByAccountNumber(accountNumber);
             System.out.println("Account Validated");
             bankAccount.setBalance(bankAccount.getBalance() + amount);
-
             addTransactionToHistory(bankAccount, "DEPOSIT", amount, "COMPLETED");
+            bankAccountRepository.save(bankAccount);
+
             return new ResponseEntity<>("Amount deposited : " + amount, HttpStatus.OK);
         }catch (Exception ex){
+            ex.printStackTrace();
             return new ResponseEntity<>("Account not found.", HttpStatus.NOT_FOUND);
         }
 
@@ -57,6 +62,8 @@ public class AccountService {
 
             bankAccount.setBalance(bankAccount.getBalance() - amount);
             addTransactionToHistory(bankAccount, "WITHDRAW", amount, "COMPLETED");
+
+            bankAccountRepository.save(bankAccount);
             return new ResponseEntity<>("Amount withdrawn : " + amount, HttpStatus.OK);
         }catch (Exception ex){
             return new ResponseEntity<>("Account not found.", HttpStatus.NOT_FOUND);
@@ -91,6 +98,9 @@ public class AccountService {
             addTransactionToHistory(fromAccount, "TRANSFER", amount, "COMPLETED");
             addTransactionToHistory(toAccount, "RECEIVE", amount, "COMPLETED");
 
+            bankAccountRepository.save(fromAccount);
+            bankAccountRepository.save(toAccount);
+
             return new ResponseEntity<>("Transferred amount successfully", HttpStatus.OK);
         }catch (Exception ex){
             return new ResponseEntity<>("To Account not found.", HttpStatus.NOT_FOUND);
@@ -99,6 +109,8 @@ public class AccountService {
     }
 
     public ResponseEntity<List<BankAccount>> getAllAccount(){
+
+        List<BankAccount> bankAccounts = bankAccountRepository.findAll();
         return new ResponseEntity<>(bankAccounts, HttpStatus.OK);
     }
 
@@ -113,26 +125,29 @@ public class AccountService {
 
     private void addTransactionToHistory(BankAccount bankAccount, String transactionType, Double amount, String status){
         Transaction transaction = new Transaction();
-        transaction.setId(new Random().nextLong());
         transaction.setTransactionType(transactionType);
         transaction.setAmount(amount);
         transaction.setStatus(status);
         transaction.setTimeStamp(new Date());
-
+        transaction.setBankAccount(bankAccount);
         bankAccount.getTransactionHistory().add(transaction);
-        if (FraudDetector.detectFraud(bankAccount,transaction)){
-            System.out.println("Suspected Fraud with this transaction");
-            transaction.setDescription("Suspected Fraud with this transaction");
-        }
+
     }
 
 
     private BankAccount findAccountByAccountNumber(Long accountNumber) throws Exception {
-        for(BankAccount b: bankAccounts){
-            if (b.getAccountNumber().equals(accountNumber)){
-                return b;
-            }
+//        for(BankAccount b: bankAccounts){
+//            if (b.getAccountNumber().equals(accountNumber)){
+//                return b;
+//            }
+//        }
+
+        Optional<BankAccount> bankAccountOptional = bankAccountRepository.findByAccountNumber(accountNumber);
+
+        if (bankAccountOptional.isPresent()){
+            return bankAccountOptional.get();
         }
+
         throw new Exception("Account Not Found");
     }
 
