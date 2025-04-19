@@ -1,5 +1,6 @@
 package com.npci.bankdemo.dao;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,6 +28,7 @@ public class BankAccount {
     private String branch;
 
     @OneToMany(mappedBy = "bankAccount", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Transaction> transactionHistory = new ArrayList<>();
 
 }

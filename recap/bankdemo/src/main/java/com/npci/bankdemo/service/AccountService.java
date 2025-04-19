@@ -111,6 +111,8 @@ public class AccountService {
     public ResponseEntity<List<BankAccount>> getAllAccount(){
 
         List<BankAccount> bankAccounts = bankAccountRepository.findAll();
+        // transformation to DTO
+
         return new ResponseEntity<>(bankAccounts, HttpStatus.OK);
     }
 

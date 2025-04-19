@@ -1,5 +1,6 @@
 package com.npci.bankdemo.dao;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,5 +24,6 @@ public class Transaction {
     private String description;
 
     @ManyToOne
+    @JsonBackReference
     private BankAccount bankAccount;
 }
